@@ -333,7 +333,7 @@ with tab2:
                 margin=dict(l=0, r=0, t=30, b=0),
                 showlegend=False
             )
-            st.plotly_chart(fig_knowledge, width='stretch')
+            st.plotly_chart(fig_knowledge, use_container_width=True)
         
         with viz2_col:
             st.markdown("#### Gender Distribution")
@@ -353,7 +353,7 @@ with tab2:
                 template="plotly_white",
                 margin=dict(l=0, r=0, t=30, b=0)
             )
-            st.plotly_chart(fig_gender, width='stretch')
+            st.plotly_chart(fig_gender, use_container_width=True)
         
         # Row 2: Gender vs Knowledge
         st.markdown("#### Gender vs Knowledge Level")
@@ -381,7 +381,7 @@ with tab2:
             hovermode='x unified',
             margin=dict(l=0, r=0, t=30, b=0)
         )
-        st.plotly_chart(fig_grouped, width='stretch')
+        st.plotly_chart(fig_grouped, use_container_width=True)
         
         # Row 3: Information Source
         st.markdown("#### Information Source Distribution")
@@ -406,7 +406,7 @@ with tab2:
             margin=dict(l=0, r=0, t=30, b=0),
             showlegend=False
         )
-        st.plotly_chart(fig_source, width='stretch')
+        st.plotly_chart(fig_source, use_container_width=True)
         
         # Row 4: Age vs Score
         st.markdown("#### Age vs Knowledge Score")
@@ -428,7 +428,7 @@ with tab2:
             hovermode='closest',
             margin=dict(l=0, r=0, t=30, b=0)
         )
-        st.plotly_chart(fig_scatter, width='stretch')
+        st.plotly_chart(fig_scatter, use_container_width=True)
     
     with stats_col:
         st.markdown("### 📊 Statistics")
@@ -626,7 +626,7 @@ with tab4:
     
     st.dataframe(
         display_df[['Respondent_ID', 'Age', 'Gender', 'Age_Group', 'Knowledge_Score', 'Knowledge_Level', 'Barangay']],
-        width='stretch',
+        use_container_width=True,
         height=400
     )
     
