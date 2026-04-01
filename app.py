@@ -299,10 +299,33 @@ with tab2:
         (df['Information_Source'].isin(selected_info_source))
     ]
     
+    # ====== RESPONDENT LIST (SIDEBAR - ONLY IN DASHBOARD TAB) ======
+    display_respondents = filtered_df.copy()
+    display_respondents['Knowledge_Score'] = display_respondents['Knowledge_Score'].round(1)
+    display_respondents = display_respondents.sort_values('Respondent_ID')
+    
+    st.sidebar.markdown("### 📋 Dashboard Respondents")
+    st.sidebar.markdown(f"**Total: {len(filtered_df)}**")
+    st.sidebar.divider()
+    
+    st.sidebar.dataframe(
+        display_respondents[['Respondent_ID', 'Age', 'Gender', 'Knowledge_Score']],
+        height=500,
+        column_config={
+            'Respondent_ID': st.column_config.TextColumn(label='ID', width='small'),
+            'Age': st.column_config.NumberColumn(label='Age', width='small'),
+            'Gender': st.column_config.TextColumn(label='Gen', width='small'),
+            'Knowledge_Score': st.column_config.NumberColumn(label='Score', width='small'),
+        },
+        hide_index=True
+    )
+    
+    st.sidebar.divider()
+    
     st.info(f"📊 Showing {len(filtered_df)} of {len(df)} respondents")
     st.divider()
     
-    # Visualizations and Statistics
+    # Visualizations and Statistics (full width, no left column)
     viz_col, stats_col = st.columns([3.5, 3])
     
     with viz_col:
