@@ -4,6 +4,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
 import numpy as np
+import folium
+from streamlit_folium import st_folium
 
 # Configure page
 st.set_page_config(
@@ -81,6 +83,27 @@ def generate_sample_data(n_records=150):
     age_groups = pd.cut(ages, bins=[14, 19, 24, 29, 34], 
                         labels=['15-19', '20-24', '25-29', '30-34'])
     
+    # Assign to 3 barangays with realistic distribution
+    barangays = np.random.choice(['Barangay Poblacion', 'Barangay Bagay', 'Barangay Catagoan'], 
+                                  n_records, p=[0.35, 0.35, 0.30])
+    
+    # Generate random coordinates within each barangay area (Daet, Camarines Norte)
+    barangay_coords = {
+        'Barangay Poblacion': (14.1160, 121.6450),
+        'Barangay Bagay': (14.1100, 121.6350),
+        'Barangay Catagoan': (14.1050, 121.6550)
+    }
+    
+    lats = []
+    lons = []
+    for barangay in barangays:
+        base_lat, base_lon = barangay_coords[barangay]
+        # Add some random variation within barangay (~500m radius)
+        lat = base_lat + np.random.uniform(-0.005, 0.005)
+        lon = base_lon + np.random.uniform(-0.005, 0.005)
+        lats.append(lat)
+        lons.append(lon)
+    
     df = pd.DataFrame({
         'Respondent_ID': respondent_ids,
         'Age': ages,
@@ -88,7 +111,10 @@ def generate_sample_data(n_records=150):
         'Age_Group': age_groups,
         'Knowledge_Score': knowledge_scores,
         'Knowledge_Level': knowledge_levels,
-        'Information_Source': info_sources
+        'Information_Source': info_sources,
+        'Barangay': barangays,
+        'Latitude': lats,
+        'Longitude': lons
     })
     
     return df
@@ -170,6 +196,93 @@ filtered_df = df[
 filter_info_col1, filter_info_col2, filter_info_col3 = st.columns([2, 1, 1])
 with filter_info_col1:
     st.info(f"📊 Showing {len(filtered_df)} of {len(df)} respondents")
+
+st.divider()
+
+# ============================================================================
+# MAP VISUALIZATION - BARANGAY DISTRIBUTION
+# ============================================================================
+
+st.markdown("### 🗺️ Geographic Distribution by Barangay")
+
+map_col1, map_col2 = st.columns([2, 1])
+
+with map_col1:
+    # Create Folium map
+    m = folium.Map(
+        location=[14.1100, 121.6450],
+        zoom_start=13,
+        tiles="OpenStreetMap"
+    )
+    
+    # Define barangay centers and boundaries
+    barangay_centers = {
+        'Barangay Poblacion': (14.1160, 121.6450),
+        'Barangay Bagay': (14.1100, 121.6350),
+        'Barangay Catagoan': (14.1050, 121.6550)
+    }
+    
+    # Add barangay circles to map
+    barangay_colors = {
+        'Barangay Poblacion': '#3498db',
+        'Barangay Bagay': '#e74c3c',
+        'Barangay Catagoan': '#2ecc71'
+    }
+    
+    for barangay, (lat, lon) in barangay_centers.items():
+        folium.Circle(
+            location=(lat, lon),
+            radius=400,
+            popup=barangay,
+            color=barangay_colors[barangay],
+            fill=True,
+            fillColor=barangay_colors[barangay],
+            fillOpacity=0.3,
+            weight=3
+        ).add_to(m)
+    
+    # Add respondent markers
+    for idx, row in filtered_df.iterrows():
+        folium.CircleMarker(
+            location=(row['Latitude'], row['Longitude']),
+            radius=6,
+            popup=f"ID: {row['Respondent_ID']}<br>Age: {row['Age']}<br>Score: {row['Knowledge_Score']:.1f}<br>Barangay: {row['Barangay']}",
+            color=barangay_colors[row['Barangay']],
+            fill=True,
+            fillColor=barangay_colors[row['Barangay']],
+            fillOpacity=0.7,
+            weight=2
+        ).add_to(m)
+    
+    st_folium(m, width=700, height=500)
+
+with map_col2:
+    st.markdown("#### Barangay Distribution")
+    
+    barangay_stats = filtered_df['Barangay'].value_counts()
+    
+    for barangay in ['Barangay Poblacion', 'Barangay Bagay', 'Barangay Catagoan']:
+        if barangay in barangay_stats.index:
+            count = barangay_stats[barangay]
+            pct = (count / len(filtered_df) * 100) if len(filtered_df) > 0 else 0
+            
+            # Color dot indicator
+            color = barangay_colors[barangay]
+            st.markdown(f"<span style='color:{color}'>●</span> **{barangay}**", unsafe_allow_html=True)
+            st.markdown(f"  {count} respondents ({pct:.1f}%)")
+        else:
+            st.markdown(f"<span style='color:{barangay_colors[barangay]}'>●</span> **{barangay}**", unsafe_allow_html=True)
+            st.markdown(f"  0 respondents (0%)")
+    
+    st.divider()
+    
+    with st.expander("📍 How to use the map", expanded=False):
+        st.markdown("""
+- **Circles:** Each colored circle represents a barangay area
+- **Dots:** Each dot is a respondent with their location
+- **Zoom:** Click and drag to zoom for detailed view
+- **Info:** Hover over or click dots to see respondent info
+        """)
 
 st.divider()
 
